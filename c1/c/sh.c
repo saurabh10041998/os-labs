@@ -6,10 +6,12 @@
 #include <assert.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 
 // Simplifed xv6 shell.
 
 #define MAXARGS 10
+#define MAXLINE 100
 
 // All commands have at least a type. Have looked at the type, the code
 // typically casts the *cmd to some specific cmd type.
@@ -89,6 +91,10 @@ getcmd(char *buf, int nbuf)
     fprintf(stdout, "$ ");
   memset(buf, 0, nbuf);
   fgets(buf, nbuf, stdin);
+  // Observation
+  // when we press cntl + c, we hit this conditon
+  // And we fall of the loop and exit the shell
+  // TODO: Add signal handler to catch cntl + c and ignore it
   if(buf[0] == 0) // EOF
     return -1;
   return 0;
@@ -97,7 +103,7 @@ getcmd(char *buf, int nbuf)
 int
 main(void)
 {
-  static char buf[100];
+  static char buf[MAXLINE];
   int fd, r;
 
   // Read and run input commands.
@@ -113,6 +119,7 @@ main(void)
     if(fork1() == 0)
       runcmd(parsecmd(buf));
     wait(&r);
+    fprintf(stderr, "child exited with r=%d\n", r);
   }
   exit(0);
 }
@@ -154,6 +161,7 @@ redircmd(struct cmd *subcmd, char *file, int type)
   return (struct cmd*)cmd;
 }
 
+// factory method to create pipecmd struct
 struct cmd*
 pipecmd(struct cmd *left, struct cmd *right)
 {
@@ -209,6 +217,10 @@ gettoken(char **ps, char *es, char **q, char **eq)
   return ret;
 }
 
+
+// Peek has two motives
+// trim out whitespaces in between
+// check if the next token is in toks
 int
 peek(char **ps, char *es, char *toks)
 {
@@ -262,6 +274,10 @@ parseline(char **ps, char *es)
   return cmd;
 }
 
+
+// recursive
+// parse the left side of the pipe
+// if we see a pipe, then parse the right side of the pipe
 struct cmd*
 parsepipe(char **ps, char *es)
 {
@@ -270,7 +286,7 @@ parsepipe(char **ps, char *es)
   cmd = parseexec(ps, es);
   if(peek(ps, es, "|")){
     gettoken(ps, es, 0, 0);
-    cmd = pipecmd(cmd, parsepipe(ps, es));
+    cmd = pipecmd(cmd, parsepipe(ps, es)); // recursion
   }
   return cmd;
 }
