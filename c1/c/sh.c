@@ -62,7 +62,9 @@ runcmd(struct cmd *cmd)
     ecmd = (struct execcmd*)cmd;
     if(ecmd->argv[0] == 0)
       exit(0);
-    fprintf(stderr, "exec not implemented\n");
+    const char *cmdname = ecmd->argv[0];
+    // TODO: handle built in plus PATH search
+    fprintf(stderr, "%s not implemented\n", cmdname);
     // Your code here ...
     break;
 
@@ -105,6 +107,12 @@ main(void)
 {
   static char buf[MAXLINE];
   int fd, r;
+  unsigned int debug_mode = 0;
+
+  const char* debug_env = getenv("DEBUG");
+  if (debug_env && strcmp(debug_env, "1") == 0) {
+    debug_mode = 1;
+  }
 
   // Read and run input commands.
   while(getcmd(buf, sizeof(buf)) >= 0){
@@ -119,7 +127,9 @@ main(void)
     if(fork1() == 0)
       runcmd(parsecmd(buf));
     wait(&r);
-    fprintf(stderr, "child exited with r=%d\n", r);
+    if (debug_mode) {
+      fprintf(stderr, "child exited with r=%d\n", r);
+    }
   }
   exit(0);
 }
@@ -180,6 +190,11 @@ pipecmd(struct cmd *left, struct cmd *right)
 char whitespace[] = " \t\r\n\v";
 char symbols[] = "<|>";
 
+// Call 1: gettoken() → 'a' (q="cat", eq=" ")
+// Call 2: gettoken() → 'a' (q="file", eq=" ")
+// Call 3: gettoken() → '|' (q="|", eq=" ")
+// Call 4: gettoken() → 'a' (q="grep", eq="\0")
+
 int
 gettoken(char **ps, char *es, char **q, char **eq)
 {
@@ -220,7 +235,7 @@ gettoken(char **ps, char *es, char **q, char **eq)
 
 // Peek has two motives
 // trim out whitespaces in between
-// check if the next token is in toks
+// check if character pointed by s is in the toks string
 int
 peek(char **ps, char *es, char *toks)
 {
