@@ -63,8 +63,22 @@ runcmd(struct cmd *cmd)
     if(ecmd->argv[0] == 0)
       exit(0);
     const char *cmdname = ecmd->argv[0];
-    // TODO: handle built in plus PATH search
-    fprintf(stderr, "%s not implemented\n", cmdname);
+
+    // TODO: handle built-in commands
+    // and PATH search
+    if (strcmp(cmdname, "exit") == 0) {
+      fprintf(stderr, "Unreachable code\n");
+      assert(0);
+    }
+    else if (strcmp(cmdname, "ls") == 0) {
+      // TODO: port to pure c code rather than
+      // relying system's ls command
+      execlp("ls", "ls", NULL);
+      perror("exec ls");
+      exit(-1);
+    } else {
+      fprintf(stderr, "%s not implemented\n", cmdname);
+    }
     // Your code here ...
     break;
 
@@ -124,8 +138,22 @@ main(void)
         fprintf(stderr, "cannot cd %s\n", buf+3);
       continue;
     }
+    struct cmd *cmd = parsecmd(buf);
+    if (cmd->type == ' ') {
+      struct execcmd *ecmd = (struct execcmd*)cmd;
+      if (strcmp(ecmd->argv[0], "exit") == 0) {
+        unsigned int exit_status = 0;
+        if (ecmd->argv[1] != NULL) {
+          exit_status = atoi(ecmd->argv[1]);
+        }
+        if (debug_mode) {
+          fprintf(stderr, "exiting with status %d\n", exit_status);
+        }
+        exit(exit_status);
+      }
+    }
     if(fork1() == 0)
-      runcmd(parsecmd(buf));
+      runcmd(cmd);
     wait(&r);
     if (debug_mode) {
       fprintf(stderr, "child exited with r=%d\n", r);
