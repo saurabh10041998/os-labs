@@ -9,6 +9,8 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 
+#include "ls.h"
+
 // Simplifed xv6 shell.
 
 #define MAXARGS 10
@@ -74,7 +76,7 @@ runcmd(struct cmd *cmd)
     else if (strcmp(cmdname, "ls") == 0) {
       // TODO: port to pure c code rather than
       // relying system's ls command
-      execlp("ls", "ls", NULL);
+      handle_ls();
       perror("exec ls");
       exit(-1);
     } else {
