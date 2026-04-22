@@ -2,7 +2,7 @@
 #include <dirent.h>
 #include <stdlib.h>
 
-#include "cmd.h"
+#include "ls.h"
 
 
 CMD
@@ -12,7 +12,7 @@ handle_ls() {
   DIR *dp = opendir(".");
 
   if (dp == NULL) {
-    perror("Cannot open current directory");
+    perror("ls: Cannot open current directory");
     exit(-1);
   }
 

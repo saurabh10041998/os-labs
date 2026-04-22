@@ -1,6 +1,8 @@
 #ifndef LS_H
 #define LS_H
 
-void handle_ls();
+#include "cmd.h"
+
+CMD handle_ls();
 
 #endif
