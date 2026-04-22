@@ -10,7 +10,9 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
-add_executable(
-  sh
-  sh.c
-)
+set(LIBRARY_NAME cmds)
+set(SH_EXECUTABLE sh)
+
+add_subdirectory(src)
+add_subdirectory(app)
+
