@@ -52,7 +52,7 @@ runcmd(struct cmd *cmd)
       handle_ls();
     } 
     else if (strcmp(cmdname, "echo") == 0) {
-      handle_echo();
+      handle_echo(ecmd);
     }
     else {
       fprintf(stderr, "%s not implemented\n", cmdname);
